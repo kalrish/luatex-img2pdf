@@ -1,0 +1,14 @@
+\catcode`\{=1
+\catcode`\}=2
+\directlua{
+	pdf.setminorversion(5)% PDF minor version higher than 4 required to compress PDF objects
+	pdf.setcompresslevel(9)
+	pdf.setobjcompresslevel(9)
+	lua.setbytecode(1,assert(loadfile("img2pdf.lua","t")))
+	tex.enableprimitives("",{"dump","hsize","vsize","pagewidth","pageheight","end"})
+}
+\everyjob={
+	\directlua{lua.getbytecode(1)()}
+	\end
+}
+\dump

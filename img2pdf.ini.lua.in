@@ -1,0 +1,206 @@
+local string_match = string.match
+
+local everything_ok = true
+local function log_error(...)
+	texio.write("term", "error: ")
+	texio.write("term", ...)
+	texio.write("term", "\n")
+	everything_ok = false
+end
+
+-- Global variables to communicate with the regular script
+	-- image_file_name
+	-- output_pdf_name
+	-- pdf_minor_version
+	-- pdf_compression_level
+	-- pdf_object_compression_level
+	chunks_to_execute = { }
+--
+
+texconfig.kpse_init = false
+
+-- Manage callbacks
+do
+	local callback_register = callback.register
+	
+	-- Information reporting callbacks
+	do
+		callback_register("start_run", false)
+		callback_register("stop_run", false)
+		callback_register("start_file", false)
+		callback_register("stop_file", false)
+		callback_register("start_page_number", false)
+		callback_register("stop_page_number", false)
+	end
+	
+	local io_open = io.open
+	
+	-- File discovery callbacks --
+	do
+		local directory_separator = string_match(package.config, "^([^\n]+)")
+		
+		local function find_xxx_file(asked_name)
+			return asked_name
+		end
+		
+		callback_register("find_format_file",
+			function( format_name )
+				local fd = io_open(format_name, "rb")
+				if fd then
+					fd:close()
+					return format_name
+				else
+					local path = [[@FORMAT_DIR@]] .. directory_separator .. format_name
+					fd = io_open(path, "rb")
+					if fd then
+						fd:close()
+						return path
+					end
+				end
+			end
+		)
+		callback_register("find_read_file",
+			function( id_number , asked_name )
+				return asked_name
+			end
+		)
+		callback_register("find_write_file",
+			function( id_number , asked_name )
+				return asked_name
+			end
+		)
+		callback_register("find_image_file", find_xxx_file)
+		callback_register("find_output_file", find_xxx_file)
+	end
+	
+	-- File reading callbacks
+	do
+		callback_register("open_read_file",
+			function( asked_name )
+				local file = io_open(asked_name)
+				if file then
+					return {
+						reader = function(t)
+							return file:read("*l")
+						end,
+						close = function(t)
+							file:close()
+						end
+					}
+				else
+					return {
+						reader = function()
+							return ""
+						end
+					}
+				end
+			end
+		)
+		
+		callback_register("read_pk_file", false)
+	end
+end
+
+-- Process arguments
+do
+	local chunks_to_execute_n = 0
+	
+	local arg = arg
+	local i = 1
+	local argument = arg[1]
+	
+	local function process_positional_argument()
+		if not image_file_name then
+			image_file_name = argument
+		elseif not output_pdf_name then
+			output_pdf_name = argument
+		else
+			log_error("image path and output PDF path already specified")
+		end
+	end
+	
+	local processing_arguments = true
+	while argument do
+		if processing_arguments then
+			if argument == "--" then
+				processing_arguments = false
+			else
+				local option = string_match(argument, "^%-%-(.+)$")
+				if option then
+					local value = string_match(option, "^pdf%-minor%-version=(.+)$")
+					if value then
+						if string_match(value, "^[0123456789]+$") then
+							pdf_minor_version = tonumber(value)
+						else
+							log_error("invalid PDF minor version specified")
+						end
+					else
+						value = string_match(option, "^pdf%-compression%-level=(.+)$")
+						if value then
+							if string_match(value, "^[0123456789]$") then
+								pdf_compression_level = tonumber(value)
+							else
+								log_error("invalid PDF compression level specified")
+							end
+						else
+							value = string_match(option, "^pdf%-object%-compression%-level=(.+)$")
+							if value then
+								if string_match(value, "^[0123456789]$") then
+									pdf_object_compression_level = tonumber(value)
+								else
+									log_error("invalid PDF object compression level specified")
+								end
+							else
+								value = string_match(option, "^extra%-lua%-file=(.+)$")
+								if value then
+									local r1, error_message = loadfile(value)
+									if r1 then
+										chunks_to_execute_n = chunks_to_execute_n + 1
+										chunks_to_execute[chunks_to_execute_n] = r1
+									else
+										log_error("couldn't load Lua file `", value, "`: ", error_message)
+									end
+								elseif option == "extra-lua-code" then
+									i = i + 1
+									argument = arg[i]
+									if argument then
+										local r1, error_message = load(argument)
+										if r1 then
+											chunks_to_execute_n = chunks_to_execute_n + 1
+											chunks_to_execute[chunks_to_execute_n] = r1
+										else
+											log_error("couldn't load provided Lua code: ", error_message)
+										end
+									else
+										log_error("missing argument for --extra-lua-code")
+									end
+								end
+							end
+						end
+					end
+				else
+					process_positional_argument()
+				end
+			end
+		else
+			process_positional_argument()
+		end
+		
+		i = i + 1
+		argument = arg[i]
+	end
+	
+	if image_file_name then
+		if output_pdf_name then
+			texconfig.jobname = string_match(output_pdf_name, "^(.+)%.pdf$")
+		else
+			texconfig.jobname = string_match(image_file_name, "^(.+)%..+$")
+		end
+	else
+		log_error("image path missing")
+	end
+	
+	if not everything_ok then
+		os.exit(false)
+	end
+end

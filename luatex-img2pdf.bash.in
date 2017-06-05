@@ -1,0 +1,21 @@
+jobname=
+
+declare -i processing_arguments=1
+for argument in "$@" ; do
+	if (( $processing_arguments == 1 )) ; then
+		if [[ $argument = -- ]] ; then
+			processing_arguments=0
+		elif ! [[ $argument = --* ]] ; then
+			jobname="${argument%.*}"
+		fi
+	else
+		jobname="${argument%.*}"
+	fi
+done
+
+if [[ -n "$jobname" ]] ; then
+	exec '@LUATEX@' --interaction=batchmode --halt-on-error --lua=img2pdf.ini.texluabc --fmt=img2pdf.fmt --jobname="$jobname" --output-format=pdf "$@"
+else
+	echo 'error: missing image file path'
+	exit 1
+fi

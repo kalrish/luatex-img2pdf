@@ -1,0 +1,29 @@
+@echo off
+setlocal enabledelayedexpansion
+
+set "processing_arguments=y"
+:process_argument
+if not "%~1" == "" (
+	if defined processing_arguments (
+		if "%~1" == "--" (
+			set "processing_arguments="
+		) else (
+			set var="%~1"
+			if not "!var:~0,2!" == "--" (
+				set jobname="%~n1"
+			)
+		)
+	) else (
+		set jobname="%~n1"
+	)
+	
+	shift & goto process_argument
+)
+
+if defined jobname (
+	"@LUATEX@" --interaction=batchmode --halt-on-error --lua=img2pdf.ini.texluabc --fmt=img2pdf.fmt --jobname=%jobname% --output-format=pdf %*
+	exit /b %errorlevel%
+) else (
+	echo error: missing image file path
+	exit /b 1
+)

@@ -1,0 +1,35 @@
+declare -i all_vars_ok=1
+
+check_env_var() {
+	if [[ -z "${!1}" ]] ; then
+		echo "error: \$$1 environment variable unset"
+		all_vars_ok=0
+	fi
+}
+
+LUA_INITIALIZATION_SCRIPT_DIR="${LUA_INITIALIZATION_SCRIPT_DIR:-$LUATEXDIR}"
+FORMAT_DIR="${FORMAT_DIR:-@FORMAT_DIR@}"
+BASH_PATH="${BASH_PATH:-$BASH}"
+
+check_env_var LUA_INITIALIZATION_SCRIPT_DIR
+check_env_var BINDIR
+
+if (( $all_vars_ok == 1 )) ; then
+	install -vDt "${DESTDIR}${LUA_INITIALIZATION_SCRIPT_DIR}" -m 'u=rw,go=r,a-s' -- img2pdf.ini.texluabc
+	install -vDt "${DESTDIR}${FORMAT_DIR}" -m 'u=rw,go=r,a-s' -- img2pdf.fmt
+	
+	readonly uname_o="$(uname -o)"
+	if [[ "$uname_o" == 'Cygwin' || "$uname_o" == 'Msys' ]] ; then
+		install -vDt "${DESTDIR}${BINDIR}" -m 'u=rwx,go=rx,a-s' -- 'luatex-img2pdf.bat'
+	else
+		readonly tmpfile="$(mktemp)"
+		echo "#!${BASH_PATH}" >"$tmpfile"
+		cat luatex-img2pdf.bash >>"$tmpfile"
+		install -vDT -m 'u=rwx,go=rx,a-s' -- "$tmpfile" "${DESTDIR}${BINDIR}/luatex-img2pdf"
+		rm -- "$tmpfile"
+	fi
+	
+	exit 0
+else
+	exit 1
+fi
