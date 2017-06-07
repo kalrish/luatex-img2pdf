@@ -1,0 +1,19 @@
+include_rules
+
+ifeq (@(TEST),y)
+	ifeq (@(TUP_PLATFORM),win32)
+		TEST_COMMAND_START = cmd /c call %<luatex_img2pdf_script>
+	else
+		TEST_COMMAND_START = bash --noprofile --norc -- %<luatex_img2pdf_script>
+	endif
+	
+	: ../src/<lua_init_script> |> cp -t . -- %<lua_init_script> |> img2pdf.ini.texluabc
+	
+	include Tupfile.lua
+	
+	: ../src/<luatex_img2pdf_script> img2pdf.ini.texluabc ../src/<img2pdf_format> |> $(TEST_COMMAND_START) --extra-lua-file=extra.lua -- small.png using_extra.pdf |> using_extra.log using_extra.pdf
+	
+	ifeq (@(TEST_HUGE),y)
+		: ../src/<luatex_img2pdf_script> img2pdf.ini.texluabc ../src/<img2pdf_format> huge-0-0.pdf |> $(TEST_COMMAND_START) --pdf-compression-level=9 -- huge-0-0.pdf compressing_uncompressed-huge.pdf |> compressing_uncompressed-huge.log compressing_uncompressed-huge.pdf
+	endif
+endif

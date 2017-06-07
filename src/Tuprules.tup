@@ -1,0 +1,1 @@
+!texluac = |> @(LUATEX) --luaconly -s -o %o -- %f |> %B.texluabc

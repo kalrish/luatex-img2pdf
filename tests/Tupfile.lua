@@ -6,7 +6,11 @@ local test = function( size )
 					local jobname = size .. "-" .. tostring(compression_level) .. "-" .. tostring(object_compression_level)
 					
 					tup.definerule{
-						inputs={"<required_to_use_luatex_img2pdf>"},
+						inputs={
+							"../src/<luatex_img2pdf_script>",
+							"img2pdf.ini.texluabc",
+							"../src/<img2pdf_format>"
+						},
 						command="$(TEST_COMMAND_START) --pdf-compression-level=" .. tostring(compression_level) .. " --pdf-object-compression-level=" .. tostring(object_compression_level) .. " " .. size .. ".png " .. jobname .. ".pdf",
 						outputs={
 							jobname .. ".log",
@@ -18,7 +22,11 @@ local test = function( size )
 				local jobname = size .. "-" .. tostring(compression_level)
 				
 				tup.definerule{
-					inputs={"<required_to_use_luatex_img2pdf>"},
+					inputs={
+						"../src/<luatex_img2pdf_script>",
+						"img2pdf.ini.texluabc",
+						"../src/<img2pdf_format>"
+					},
 					command="$(TEST_COMMAND_START) --pdf-compression-level=" .. tostring(compression_level) .. " " .. size .. ".png " .. jobname .. ".pdf",
 					outputs={
 						jobname .. ".log",
