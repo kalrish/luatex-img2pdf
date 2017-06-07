@@ -37,6 +37,10 @@ Tests will be run only if selected in the configuration.
  -  LuaTeX
  -  GNU Bash on systems other than Windows
 
+Additionally, on non-Windows:
+
+ -  cp, from GNU coreutils, or similar
+
 ###  Installation
 
 A helper Bash script is provided for the task of installing the files which are meant to be installed. It should work on all systems.

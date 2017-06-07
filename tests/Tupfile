@@ -7,7 +7,11 @@ ifeq (@(TEST),y)
 		TEST_COMMAND_START = bash --noprofile --norc -- %<luatex_img2pdf_script>
 	endif
 	
-	: ../src/<lua_init_script> |> cp -t . -- %<lua_init_script> |> img2pdf.ini.texluabc
+	ifeq (@(TUP_PLATFORM),win32)
+		: ../src/<lua_init_script> |> cmd /c copy ..\src\img2pdf.ini.texluabc . |> img2pdf.ini.texluabc
+	else
+		: ../src/<lua_init_script> |> cp -t . -- %<lua_init_script> |> img2pdf.ini.texluabc
+	endif
 	
 	include Tupfile.lua
 	
