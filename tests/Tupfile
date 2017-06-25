@@ -9,15 +9,17 @@ ifeq (@(TEST),y)
 	
 	ifeq (@(TUP_PLATFORM),win32)
 		: ../src/<lua_init_script> |> cmd /c copy ..\src\img2pdf.ini.texluabc . |> img2pdf.ini.texluabc
+		: ../src/img2pdf.fmt |> cmd /c copy ..\src\img2pdf.fmt . |> img2pdf.fmt
 	else
 		: ../src/<lua_init_script> |> cp -t . -- %<lua_init_script> |> img2pdf.ini.texluabc
+		: ../src/img2pdf.fmt |> cp -t . -- %f |> img2pdf.fmt
 	endif
 	
 	include Tupfile.lua
 	
-	: ../src/<luatex_img2pdf_script> img2pdf.ini.texluabc ../src/<img2pdf_format> |> $(TEST_COMMAND_START) --extra-lua-file=extra.lua -- small.png using_extra.pdf |> using_extra.log using_extra.pdf
+	: ../src/<luatex_img2pdf_script> img2pdf.ini.texluabc img2pdf.fmt |> $(TEST_COMMAND_START) --extra-lua-file=extra.lua -- small.png using_extra.pdf |> using_extra.log using_extra.pdf
 	
 	ifeq (@(TEST_HUGE),y)
-		: ../src/<luatex_img2pdf_script> img2pdf.ini.texluabc ../src/<img2pdf_format> huge-0-0.pdf |> $(TEST_COMMAND_START) --pdf-compression-level=9 -- huge-0-0.pdf compressing_uncompressed-huge.pdf |> compressing_uncompressed-huge.log compressing_uncompressed-huge.pdf
+		: ../src/<luatex_img2pdf_script> img2pdf.ini.texluabc img2pdf.fmt huge-0-0.pdf |> $(TEST_COMMAND_START) --pdf-compression-level=9 -- huge-0-0.pdf compressing_uncompressed-huge.pdf |> compressing_uncompressed-huge.log compressing_uncompressed-huge.pdf
 	endif
 endif

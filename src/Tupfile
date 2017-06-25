@@ -3,7 +3,7 @@ include_rules
 : |> tup varsed img2pdf.ini.lua.in %o |> img2pdf.ini.lua
 : img2pdf.ini.lua |> !texluac |> | <lua_init_script>
 
-: |> @(LUATEX) --ini --interaction=nonstopmode --halt-on-error --jobname=img2pdf --output-format=pdf -- img2pdf.ini.tex |> img2pdf.log img2pdf.fmt <img2pdf_format>
+: |> @(LUATEX) --ini --interaction=nonstopmode --halt-on-error --jobname=img2pdf --output-format=pdf -- img2pdf.ini.tex |> img2pdf.log img2pdf.fmt
 
 ifeq (@(TUP_PLATFORM),win32)
 	: |> tup varsed luatex-img2pdf.bat.in %o |> luatex-img2pdf.bat <luatex_img2pdf_script>
