@@ -11,8 +11,8 @@ ifeq (@(TEST),y)
 		: ../src/<lua_init_script> |> cmd /c copy ..\src\img2pdf.ini.texluabc . |> img2pdf.ini.texluabc
 		: ../src/img2pdf.fmt |> cmd /c copy ..\src\img2pdf.fmt . |> img2pdf.fmt
 	else
-		: ../src/<lua_init_script> |> cp -t . -- %<lua_init_script> |> img2pdf.ini.texluabc
-		: ../src/img2pdf.fmt |> cp -t . -- %f |> img2pdf.fmt
+		: ../src/<lua_init_script> |> cp -- %<lua_init_script> %o |> img2pdf.ini.texluabc
+		: ../src/img2pdf.fmt |> cp -- %f %o |> img2pdf.fmt
 	endif
 	
 	include Tupfile.lua
